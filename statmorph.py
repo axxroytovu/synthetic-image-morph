@@ -99,7 +99,7 @@ class galdata:
         self.lotz_morph_status = 'Not Started'
         self.petro_segmap = None
 
-    def run_lotz_morphs(self):
+    def run_lotz_morphs(self,KeepDim=False):
         #check for essential inputs
         correct_init = hasattr(self,'galaxy_image')
         correct_init = correct_init and hasattr(self,'galaxy_segmap')
@@ -129,7 +129,8 @@ class galdata:
             self.snpix_init = self.sn_per_pixel(self.galaxy_image,self.galaxy_segmap)
             self.morph_hdu.header['SNP_INIT']=(round(self.snpix_init,8),'Initial average S/N per pixel')
 
-            if self.snpix_init < 1.0:
+            
+            if self.snpix_init < 1.0 and not KeepDim:
                 self.lotz_morph_status = 'Error: too faint!'
                 print '        Exiting Morph calculation with status: '+self.lotz_morph_status
                 print '                        Average S/N per pixel: {:7.3f}'.format(self.snpix_init)
@@ -265,7 +266,8 @@ class galdata:
             self.snpix = self.sn_per_pixel(self.galaxy_image,self.petro_segmap)
             self.morph_hdu.header['SNP']=(round(self.snpix,8),'Final average S/N per pixel')
 
-            if self.snpix < 2.0:
+            
+            if self.snpix < 2.0 and not KeepDim:
                 self.lotz_morph_status = 'Error: too faint!'
                 print '        Exiting Morph calculation with status: '+self.lotz_morph_status
                 print '                        Average S/N per pixel: {:7.3f}'.format(self.snpix)
@@ -1835,17 +1837,12 @@ def morph_from_panstarrs_image(image_hdu,weight_hdu,segmap_hdu,se_catalog,extnam
 
     return morph_hdu, rpa_seg_hdu, galdataobject
 
-def morph_from_stamp(extname='StatMorphMeasurements',idl_filename=None,python_outfile=None,outobject=None):
-    Ihdulist = pyfits.open("/Users/samzimmerman/Documents/Capstone/Sam_Jeyhan_Sample/4_10.63/4_10.63_gf_changed_content.fits")
-    Shdulist = pyfits.open("/Users/samzimmerman/Desktop/COSMOS/COS_23164_segmap.fits")
+def morph_from_stamp(IMGHDU, SEGHDU, SECATALOG, extname='StatMorphMeasurements',idl_filename=None,python_outfile=None,outobject=None):
     gdOBJ = galdata()
-    SEGHDU = Shdulist[0]
-    IMGHDU = Ihdulist[10]
-    SECATALOG = {"NUMBER":23164, "ELONGATION":1.307, "THETA_IMAGE":22.3, "MAG_AUTO":24.4625, "MAGERR_AUTO":0.0791, "CD1_1":8.333333E-6}
     
     gdOBJ = gdOBJ.init_from_stamp(IMGHDU, SEGHDU, SECATALOG)
     
-    result = gdOBJ.run_lotz_morphs()
+    result = gdOBJ.run_lotz_morphs(KeepDim=True)
     
     morph_hdu = gdOBJ.return_measurement_HDU()
     morph_hdu.header['EXTNAME']=extname
@@ -1861,9 +1858,17 @@ def morph_from_stamp(extname='StatMorphMeasurements',idl_filename=None,python_ou
         gdOBJ.write_py_output_line(python_outfile)
 
     outobject = copy.copy(gdOBJ)
-    Ihdulist.close()
-    Shdulist.close()
     
     return morph_hdu, rpa_seg_hdu, gdOBJ
-    
-print morph_from_stamp()
+
+if __name__ == "__main__":
+    # execute only if run as a script
+
+    Ihdulist = pyfits.open("/Users/samzimmerman/Documents/Capstone/Sam_Jeyhan_Sample/4_10.63/4_10.63_gf_changed_content.fits")
+    Shdulist = pyfits.open("/Users/samzimmerman/Desktop/COSMOS/COS_23164_segmap.fits")
+    SEGHDU = Shdulist[0]
+    IMGHDU = Ihdulist[10]
+    SECATALOG = {"NUMBER":23164, "ELONGATION":1.307, "THETA_IMAGE":22.3, "MAG_AUTO":24.4625, "MAGERR_AUTO":0.0791, "CD1_1":8.333333E-6}
+    print morph_from_stamp(IMGHDU, SEGHDU, SECATALOG)
+    Ihdulist.close()
+    Shdulist.close()
