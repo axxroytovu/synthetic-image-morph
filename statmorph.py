@@ -1745,60 +1745,69 @@ class galdata:
         fo.close()
         return
 
-
-    def write_py_output_line(self,python_outfile):
-        fo = open(python_outfile,'a')
+    def write_py_output_line(self, python_outfile):
+        """
+        Docstring HERE
+        """
+        fo = open(python_outfile, 'a')
 
         fitsfn = self.imagefile
-        pa = (180.0/math.pi)*self.pa_radians + 90.0 
+        pa = (180.0/math.pi)*self.pa_radians + 90.0
 
-        #Galaxy    DM   dRproj"  ABMag   ABMager  <S/N>   R(1/2)c  R(1/2)e   R_pet_c  R_pet_e  AB  PA  A_XC     A_YC     M_XC     M_YC      C    r_20    r_80    Asym    S      Gini  M_20  Flag   Cnts
+        # Galaxy    DM   dRproj"  ABMag   ABMager  <S/N>   R(1/2)c  R(1/2)e
+        # R_pet_c  R_pet_e  AB  PA  A_XC     A_YC     M_XC     M_YC      C
+        # r_20    r_80    Asym    S      Gini  M_20  Flag   Cnts
         if self.morph_hdu.header['CFLAG'] != 1:
-            output_string = '{:80s}{:10.3f}{:10.3f}{:10.3f}{:10.3f}'\
-                            '{:10.3f}{:10.3f}{:10.3f}{:10.3f}{:10.3f}'\
-                            '{:10.3f}{:10.3f}{:10.3f}{:10.3f}{:10.3f}'\
-                            '{:10.3f}{:10.3f}{:10.3f}{:10.3f}{:10.3f}{:10.3f}{:10.3f}{:10.3f}{:10.3f}{:10.3f}\n'.format(fitsfn,self.dm,self.rproj_arcsec,
-                                                                                                                        self.magseg,self.magseg_err,
-                                                                                                                        self.snpix,0.0,0.0,self.rp_circ_2,self.rp_ellip,self.elongation,pa,
-                                                                                                                        self.xcen_a2,self.ycen_a2,self.mxc,self.myc,self.cc,self.r20,self.r80,
-                                                                                                                        self.asym2,0.0,self.gini,self.m20,self.flag,0.0)
+            fmt = '{:80s}' + '{:10.3f}'*19 + '\n'
+            output_string = fmt.format(fitsfn, self.dm, self.rproj_arcsec,
+                                       self.magseg, self.magseg_err,
+                                       self.snpix, 0.0, 0.0, self.rp_circ_2,
+                                       self.rp_ellip, self.elongation, pa,
+                                       self.xcen_a2, self.ycen_a2, self.mxc,
+                                       self.myc, self.cc, self.r20, self.r80,
+                                       self.asym2, 0.0, self.gini, self.m20,
+                                       self.flag, 0.0)
         else:
-            output_string = '{:80s}{:10.3f}{:10.3f}{:10.3f}{:10.3f}'\
-                            '{:10.3f}{:10.3f}{:10.3f}{:10.3f}{:10.3f}'\
-                            '{:10.3f}{:10.3f}{:10.3f}{:10.3f}{:10.3f}'\
-                            '{:10.3f}{:10.3f}{:10.3f}{:10.3f}{:10.3f}{:10.3f}{:10.3f}{:10.3f}{:10.3f}{:10.3f}\n'.format(fitsfn,self.dm,self.rproj_arcsec,
-                                                                                                                        self.magseg,self.magseg_err,
-                                                                                                                        self.snpix,0.0,0.0,self.rp_circ_2,self.rp_ellip,self.elongation,pa,
-                                                                                                                        self.xcen_a2,self.ycen_a2,self.mxc,self.myc,-1,-1,-1,
-                                                                                                                        self.asym2,0.0,self.gini,self.m20,self.cflag,0.0)            
+            fmt = '{:80s}' + '{:10.3f}'*24 + '\n'
+            output_string = fmt.format(fitsfn, self.dm, self.rproj_arcsec,
+                                       self.magseg, self.magseg_err,
+                                       self.snpix, 0.0, 0.0, self.rp_circ_2,
+                                       self.rp_ellip, self.elongation, pa,
+                                       self.xcen_a2, self.ycen_a2, self.mxc,
+                                       self.myc, -1, -1, -1, self.asym2, 0.0,
+                                       self.gini, self.m20, self.cflag, 0.0)
         fo.write(output_string)
         fo.close()
         return
 
 
-#input galaxy image HDU, segmap HDU, and photutils info HDU, 
-#return FITS HDU containing non-parametric morphology measurements either in the header or a FITS table HDU
-def morph_from_synthetic_image(data_hdu,segmap_hdu,photutils_hdu,cm_hdu,extname='LotzMorphMeasurements',idl_filename=None,python_outfile=None,outobject=None):
-    #unpack HDUs and send to generic Lotz morphology code
-
+def morph_from_synthetic_image(data_hdu, segmap_hdu, photutils_hdu, cm_hdu,
+                               extname='LotzMorphMeasurements',
+                               idl_filename=None, python_outfile=None,
+                               outobject=None):
+    """
+    Docstring HERE
+    input galaxy image HDU, segmap HDU, and photutils info HDU,
+    return FITS HDU containing non-parametric morphology measurements
+    either in the header or a FITS table HDU
+    unpack HDUs and send to generic Lotz morphology code
+    """
     galdataobject = galdata()
-    galdataobject = galdataobject.init_from_synthetic_image(data_hdu,segmap_hdu,photutils_hdu,cm_hdu)
-
-
+    galdataobject = galdataobject.init_from_synthetic_image(
+        data_hdu, segmap_hdu, photutils_hdu, cm_hdu
+    )
     result = galdataobject.run_lotz_morphs()
-        
 
     morph_hdu = galdataobject.return_measurement_HDU()
-    morph_hdu.header['EXTNAME']=extname
+    morph_hdu.header['EXTNAME'] = extname
 
     rpa_seg_hdu = galdataobject.return_rpa_segmap_hdu()
 
-    if idl_filename is not None and galdataobject.flag==0:
+    if idl_filename is not None and galdataobject.flag == 0:
         galdataobject.write_idl_input_line(idl_filename)
 
-
-    #also write output files?
-    if python_outfile is not None and galdataobject.flag==0:
+    # also write output files?
+    if python_outfile is not None and galdataobject.flag == 0:
         galdataobject.write_py_output_line(python_outfile)
 
     outobject = copy.copy(galdataobject)
@@ -1806,69 +1815,77 @@ def morph_from_synthetic_image(data_hdu,segmap_hdu,photutils_hdu,cm_hdu,extname=
     return morph_hdu, rpa_seg_hdu
 
 
-
-
-
-#work-in-progress
-def morph_from_panstarrs_image(image_hdu,weight_hdu,segmap_hdu,se_catalog,extname='StatMorphMeasurements',idl_filename=None,python_outfile=None,outobject=None):
-
-    
+def morph_from_panstarrs_image(image_hdu, weight_hdu, segmap_hdu, se_catalog,
+                               extname='StatMorphMeasurements',
+                               idl_filename=None, python_outfile=None,
+                               outobject=None):
+    """
+    Docstring HERE - WIP
+    """
     galdataobject = galdata()
-    galdataobject = galdataobject.init_from_panstarrs_image(image_hdu,weight_hdu,segmap_hdu,se_catalog)
-
+    galdataobject = galdataobject.init_from_panstarrs_image(
+        image_hdu, weight_hdu, segmap_hdu, se_catalog
+    )
 
     result = galdataobject.run_lotz_morphs()
-        
 
     morph_hdu = galdataobject.return_measurement_HDU()
-    morph_hdu.header['EXTNAME']=extname
+    morph_hdu.header['EXTNAME'] = extname
 
     rpa_seg_hdu = galdataobject.return_rpa_segmap_hdu()
 
-    if idl_filename is not None and galdataobject.flag==0:
+    if idl_filename is not None and galdataobject.flag == 0:
         galdataobject.write_idl_input_line(idl_filename)
 
-
-    #also write output files?
-    if python_outfile is not None and galdataobject.flag==0:
+    # also write output files?
+    if python_outfile is not None and galdataobject.flag == 0:
         galdataobject.write_py_output_line(python_outfile)
 
     outobject = copy.copy(galdataobject)
 
     return morph_hdu, rpa_seg_hdu, galdataobject
 
-def morph_from_stamp(IMGHDU, SEGHDU, SECATALOG, extname='StatMorphMeasurements',idl_filename=None,python_outfile=None,outobject=None):
+
+def morph_from_stamp(IMGHDU, SEGHDU, SECATALOG,
+                     extname='StatMorphMeasurements', idl_filename=None,
+                     python_outfile=None, outobject=None):
+    """
+    Docstring HERE
+    """
     gdOBJ = galdata()
-    
     gdOBJ = gdOBJ.init_from_stamp(IMGHDU, SEGHDU, SECATALOG)
-    
     result = gdOBJ.run_lotz_morphs(KeepDim=True)
-    
     morph_hdu = gdOBJ.return_measurement_HDU()
-    morph_hdu.header['EXTNAME']=extname
+    morph_hdu.header['EXTNAME'] = extname
 
     rpa_seg_hdu = gdOBJ.return_rpa_segmap_hdu()
 
-    if idl_filename is not None and gdOBJ.flag==0:
+    if idl_filename is not None and gdOBJ.flag == 0:
         gdOBJ.write_idl_input_line(idl_filename)
 
-
-    #also write output files?
-    if python_outfile is not None and gdOBJ.flag==0:
+    # also write output files?
+    if python_outfile is not None and gdOBJ.flag == 0:
         gdOBJ.write_py_output_line(python_outfile)
 
     outobject = copy.copy(gdOBJ)
-    
+
     return morph_hdu, rpa_seg_hdu, gdOBJ
 
 if __name__ == "__main__":
     # execute only if run as a script
 
-    Ihdulist = pyfits.open("/Users/samzimmerman/Documents/Capstone/Sam_Jeyhan_Sample/4_10.63/4_10.63_gf_changed_content.fits")
-    Shdulist = pyfits.open("/Users/samzimmerman/Desktop/COSMOS/COS_23164_segmap.fits")
+    Ihdulist = pyfits.open(
+        "/Users/samzimmerman/Documents/Capstone/Sam_Jeyhan_Sample/"
+        "4_10.63/4_10.63_gf_changed_content.fits"
+    )
+    Shdulist = pyfits.open(
+        "/Users/samzimmerman/Desktop/COSMOS/COS_23164_segmap.fits"
+    )
     SEGHDU = Shdulist[0]
-    IMGHDU = Ihdulist[10]
-    SECATALOG = {"NUMBER":23164, "ELONGATION":1.307, "THETA_IMAGE":22.3, "MAG_AUTO":24.4625, "MAGERR_AUTO":0.0791, "CD1_1":8.333333E-6}
+    IMGHDU = Ihdulist[5]
+    SECATALOG = {"NUMBER": 23164, "ELONGATION": 1.307, "THETA_IMAGE": 22.3,
+                 "MAG_AUTO": 24.4625, "MAGERR_AUTO": 0.0791,
+                 "CD1_1": 8.333333E-6}
     print morph_from_stamp(IMGHDU, SEGHDU, SECATALOG)
     Ihdulist.close()
     Shdulist.close()
