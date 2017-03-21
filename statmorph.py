@@ -18,7 +18,7 @@ import scipy.odr as odr
 import glob
 import os
 import make_color_image
-#import make_fake_wht
+# import make_fake_wht
 import gzip
 import tarfile
 import shutil
@@ -34,11 +34,12 @@ from astropy.visualization import *
 import astropy.io.fits as pyfits
 import datetime
 import medianstats_bootstrap as msbs
-#want my custom skimage latest version not ssbx
+# want my custom skimage latest version not ssbx
 sys.path = ['/Users/gsnyder/ssbvirt/ssbx-osx/lib/python2.7/site-packages']+sys.path
 import skimage.transform
 import copy
 import region_grow
+# import matplotlib.pyplot as plt
 
 def arcsec_per_radian():
     return 3600.0*(180.0/math.pi)
@@ -1549,10 +1550,15 @@ class galdata:
         xsize = min(seg_hdu.data.shape[0], data_hdu.data.shape[0])/2
         ysize = min(seg_hdu.data.shape[1], data_hdu.data.shape[1])/2
         self.segmap = seg_hdu.data[seg_hdu.data.shape[0]/2-xsize:seg_hdu.data.shape[0]/2+xsize, seg_hdu.data.shape[1]/2-ysize:seg_hdu.data.shape[1]/2+ysize]
+        minsize = min(self.segmap.shape)
+        self.segmap = self.segmap[int(self.segmap.shape[0]-minsize)/2:int(self.segmap.shape[0]+minsize)/2, int(self.segmap.shape[1]-minsize)/2:int(self.segmap.shape[1]+minsize)/2]
         self.image = data_hdu.data[data_hdu.data.shape[0]/2-xsize:data_hdu.data.shape[0]/2+xsize, data_hdu.data.shape[1]/2-ysize:data_hdu.data.shape[1]/2+ysize]
+        self.image = self.image[int(self.image.shape[0]-minsize)/2:int(self.image.shape[0]+minsize)/2, int(self.image.shape[1]-minsize)/2:int(self.image.shape[1]+minsize)/2]
         self.filter_segmap = False
         self.galaxy_segmap = np.where(self.segmap==self.clabel,self.segmap,np.zeros_like(self.segmap))
         self.galaxy_image = np.where(np.logical_or(self.segmap==self.clabel,self.segmap==0),self.image,np.zeros_like(self.image))
+        # plt.imshow(self.galaxy_segmap)
+        # plt.show()
         
         #number of pixels in image
         self.npix = self.image.shape[0]
