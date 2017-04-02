@@ -702,8 +702,8 @@ class galdata:
         seg = segmap.flatten()
         ap = np.where(seg > 0.0)[0]
         n = np.sum(np.ones_like(ap))
-        #print n, self.skysig
         s2n = np.sum( im[ap]/((self.skysig**2)**0.5))/n
+        # print n, self.skysig, s2n
 
         return s2n
 
@@ -1574,7 +1574,7 @@ class galdata:
         #physical scale in kpc, for funsies
         self.kpc_per_arcsec = None #data_hdu.header['PSCALE']
         #sky = background level in image
-        self.sky = 0.0 #data_hdu.header['SKY']
+        self.sky = np.percentile(self.image, 30) #data_hdu.header['SKY']
         #x and y positions. MUST CONFIRM PYTHON ORDERING/locations, 0,1 as x,y seem ok for now
         self.xcentroid = self.image.shape[0]/2 #segmap_hdu.header['POS0']
         self.ycentroid = self.image.shape[1]/2 #segmap_hdu.header['POS1']
@@ -1588,10 +1588,10 @@ class galdata:
         #PA position angle.  WHAT UNITS?
         self.pa_radians = se_catalog['THETA_IMAGE']*(math.pi/180.0) #this looks like it's in radians, counterclockwise (photutils)
         #skybox.  do we need this if we know skysig?
-        self.skysig = 1.0 #data_hdu.header['SKYSIG']
+        self.skysig = se_catalog['FLUXERR_AUTO']**2 #data_hdu.header['SKYSIG']
         #create arbitrary perfect noise image matching synthetic image properties
         #this is okay if noise is perfectly uniform gaussian right?
-        self.skybox = self.skysig*np.random.randn(50,50)
+        self.skybox = self.skysig*np.random.normal(0,1,(50,50))
         bc1 = float(self.skybox.shape[0]-1)/2.0
         bc2 = float(self.skybox.shape[1]-1)/2.0
         self.rot_skybox = skimage.transform.rotate(self.skybox,180.0,center=(bc1,bc2),mode='constant',cval=0.0,preserve_range=True)
