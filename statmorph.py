@@ -225,7 +225,7 @@ class galdata:
             #3.  Compute segmap around this centroid instead
             #4.  Re-compute centroid?
 
-            self.petro_segmap_init = self.petro_sma_segmap(self.xcen_a2,self.ycen_a2,self.rp_ellip)
+            self.petro_segmap_init = self.petro_sma_segmap(self.xcen_a2,self.ycen_a2,self.rp_ellip,KeepDim=KeepDim)
             if self.petro_segmap_init is None:
                 self.lotz_morph_status = 'Error: Poor RPA segmap (1) (probably negative avg flux)'
                 print '        Exiting Morph calculation with status: '+self.lotz_morph_status
@@ -245,7 +245,7 @@ class galdata:
             #this assumes that 2nd moment is minimized when center is the centroid
 
 
-            self.petro_segmap = self.petro_sma_segmap(self.mxc,self.myc,self.rp_ellip)
+            self.petro_segmap = self.petro_sma_segmap(self.mxc,self.myc,self.rp_ellip,KeepDim=KeepDim)
             self.rpaseg_galaxy_image = np.where(self.petro_segmap==10.0, self.galaxy_image, np.zeros_like(self.galaxy_image))
             if self.petro_segmap is None:
                 self.lotz_morph_status = 'Error: Poor RPA segmap (2) (probably negative avg flux)'
@@ -321,6 +321,8 @@ class galdata:
             if num != 1:
                 print '        Non-contiguous or non-existent segmap! {:4d}  '.format(num)
                 self.lotz_morph_status = 'Error: bad segmap'
+            if KeepDim:
+                return
 
 
 
@@ -993,7 +995,7 @@ class galdata:
 
     #code's internal segmentation map algorithm, following Lotz et al. (2004)
     #this is probably the most important uncertainty in the translation from the IDL code
-    def petro_sma_segmap(self,xcenter,ycenter,r_ellip):
+    def petro_sma_segmap(self,xcenter,ycenter,r_ellip,KeepDim=False):
         #first, convolve by Gaussian with FWHM~ 1/5 (1/10?) petrosian radius?
         fwhm_pixels = r_ellip/10.0
         galaxy_psf_pixels = self.psf_fwhm_arcsec/self.pixelscale_arcsec
@@ -1027,7 +1029,7 @@ class galdata:
 
         #do we also want a S/N test here?
 
-        if avg_flux_in_annulus > 0.0:
+        if avg_flux_in_annulus > 0.0 or KeepDim:
             #set pixels with flux >= mu equal to 10, < mu equal to 0.0
             #initial calculation
             self.galaxy_smoothed_segmap = np.where(smoothed_image >= avg_flux_in_annulus,10.0*np.ones_like(smoothed_image),np.zeros_like(smoothed_image))
